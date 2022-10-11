@@ -120,7 +120,7 @@ def expand(cur, depth, max):
             res = [pawnPos[0] + mov[0], pawnPos[1] + mov[1]]
             # res = [ai + bi for ai, bi, in zip(pawnPos, mov)]
             if res[0] in range(0, 3) and res[1] in range(0, 3):
-                board = copy_arr(cur.board)
+                board = copy_arr(cur.board)z zzzzzzzz
                 play = cur.copy()
                 if board[res[0]][res[1]] == 0:
                     board[pawnPos[0]][pawnPos[1]] = 0
