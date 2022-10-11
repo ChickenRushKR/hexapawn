@@ -129,12 +129,20 @@ def expand(cur, depth, max):
                 board[pawnPos[0]][pawnPos[1]] = 0
                 board[res[0]][res[1]] = play.player.color
                 play.player.mov(pawnPos, res)
-                child = Node(parent=cur, board=board, player=play.enemy, enemy=play.player, depth=play.depth+1)
+                child = Node(parent=cur, board=board, player=play.enemy, enemy=play.player, depth=depth + 1)
                 child.move = [pawnPos, res]
-                if score(board)[max] != 100:
+                _score = score(board)
+                if abs(_score[1]) != 100:
                     child.score = expand(child, depth + 1, max = not max)
                 else:
-                    child.score = score(board)[max]
+                    if max is False:
+                        print("FOR WHITE")
+                    child.score = _score[1]
+                # if score(board)[play.player.color - 1] != 100:
+                #     child.score = expand(child, depth + 1, max = not max)
+                # else:
+                #     print("im back")
+                #     child.score = score(board)[play.enemy.color - 1]
 
                 if len(cur.children) != 0 and cur.children[0].score <= child.score and max is False:
                     idx += 1
@@ -150,12 +158,20 @@ def expand(cur, depth, max):
                 board[res[0]][res[1]] = play.player.color
                 play.player.mov(pawnPos, res)
                 play.enemy.die(res[0], res[1])
-                child = Node(parent=cur, board=board, player=play.enemy, enemy=play.player, depth=play.depth+1)
+                child = Node(parent=cur, board=board, player=play.enemy, enemy=play.player, depth=depth + 1)
                 child.move = [pawnPos, res]
-                if score(board)[max] != 100:
+                _score = score(board)
+                if abs(_score[1]) != 100:
                     child.score = expand(child, depth + 1, max = not max)
                 else:
-                    child.score = score(board)[max]
+                    if max is False:
+                        print("FOR WHITE")
+                    child.score = _score[1]
+                # if score(board)[play.player.color - 1] != 100:
+                #     child.score = expand(child, depth + 1, max = not max)
+                # else:
+                #     print("im back")
+                #     child.score = score(board)[play.enemy.color - 1]
                     
                 if len(cur.children) != 0 and cur.children[0].score <= child.score and max is False:
                     idx += 1
