@@ -136,8 +136,9 @@ def expand(cur, depth, max):
                     child.score = expand(child, depth + 1, max = not max)
                 else:
                     if max is False:
-                        print("FOR WHITE")
-                    child.score = _score[1]
+                        child.score = -100
+                    else:
+                        child.score = 100
                 # if score(board)[play.player.color - 1] != 100:
                 #     child.score = expand(child, depth + 1, max = not max)
                 # else:
@@ -165,8 +166,9 @@ def expand(cur, depth, max):
                     child.score = expand(child, depth + 1, max = not max)
                 else:
                     if max is False:
-                        print("FOR WHITE")
-                    child.score = _score[1]
+                        child.score = -100
+                    else:
+                        child.score = 100
                 # if score(board)[play.player.color - 1] != 100:
                 #     child.score = expand(child, depth + 1, max = not max)
                 # else:
@@ -420,7 +422,7 @@ def main():
                 show(human, computer)
                 minimax(human, computer)
                 # exit()
-        if input('Play more (1), Exit (2)') == '1':
+        if input('Play more (1), Exit (2) ') == '1':
             continue
         else:
             break
