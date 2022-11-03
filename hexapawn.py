@@ -33,6 +33,12 @@ class Node:
         newNode = Node(self.parent, self.board, newplayer, newenemy, self.depth)
         return newNode
     
+    def sort(self, max):
+        if max:
+            self.children = sorted(self.children, key=lambda x: x.score, reverse=True)
+        else:
+            self.children = sorted(self.children, key=lambda x: x.score)
+
     
 
 class player:
@@ -102,96 +108,94 @@ class player:
 
 def expand(cur, depth, max):
     if depth == 3:
-        return
-    movrange = [[-1,0],[0,1],[1,0],[0,-1]]
-    kilrange = [[-1,-1],[-1,1],[1,1],[1,-1]]
+        _score = score(cur.board)
+        return _score[cur.enemy.color - 1]
+
+    movrange = [[-1,0],[0,1],[1,0],[0,-1],[-1,-1],[-1,1],[1,1],[1,-1]]
+    idx = 0
     l = 0
-    if abs(score(cur.board)[0]) == 100: # WHO WIN?
-        board = copy_arr(cur.board)
-        play = cur.copy()
-        child = Node(parent=cur, board=board, player=play.enemy, enemy=play.player, depth=play.depth+1)
-        cur.children.append(child)
-        _score = score(board)
-        child.score = _score[play.player.color - 1]
-    
     for pawnId in range(len(cur.player.pawnPos)):
+        idx = 0
         pawnPos = cur.player.pawnPos[pawnId]
         for mov in movrange:
             res = [pawnPos[0] + mov[0], pawnPos[1] + mov[1]]
             # res = [ai + bi for ai, bi, in zip(pawnPos, mov)]
-            if res[0] in range(0, 3) and res[1] in range(0, 3):
-                board = copy_arr(cur.board)
-                play = cur.copy()
-                if board[res[0]][res[1]] == 0:
-                    board[pawnPos[0]][pawnPos[1]] = 0
-                    board[res[0]][res[1]] = play.player.color
-                    play.player.mov(pawnPos, res)
-                    child = Node(parent=cur, board=board, player=play.enemy, enemy=play.player, depth=play.depth+1)
-                    # if depth == 2:
-                    _score = score(board)
-                    child.score = _score[play.player.color - 1]
-                    child.move = [pawnPos, res]
-                    cur.children.append(child)
-                    l += 1
-        for mov in kilrange:
-            res = [pawnPos[0] + mov[0], pawnPos[1] + mov[1]]
-            # res = [ai + bi for ai, bi, in zip(pawnPos, mov)]
-            if res[0] in range(0, 3) and res[1] in range(0, 3):
-                board = copy_arr(cur.board)
-                play = cur.copy()
-                if board[res[0]][res[1]] == play.enemy.color:
-                    board[pawnPos[0]][pawnPos[1]] = 0
-                    board[res[0]][res[1]] = play.player.color
-                    play.player.mov(pawnPos, res)
-                    play.enemy.die(res[0], res[1])
-                    child = Node(parent=cur, board=board, player=play.enemy, enemy=play.player, depth=play.depth+1)
-                    # if depth == 2:
-                    _score = score(board)
-                    child.score = _score[play.player.color - 1]
-                    child.move = [pawnPos, res]
-                    cur.children.append(child)
-                    l += 1
-    
-    print(depth, "level : ", cur.player.color, "turn")
-    for j in range(len(cur.children)):
-        for k in range(3):
-            if cur.board[k] == cur.children[j].board[k]:
-                print(cur.board[k], '---', cur.children[j].board[k])
-            else:   
-                print(cur.board[k], '>>>', cur.children[j].board[k])
-        print("====score====", cur.children[j].score)
-    
-    if l == 0:
-        return    
-    if depth == 0:      # max
-        for i in range(l):
-            expand(cur.children[i], depth + 1, True)
-        return
-    elif depth == 1:    # min
-        for i in range(l):
-            expand(cur.children[i], depth + 1, False)
-        return
-    elif depth == 2:    # max
-        for i in range(l):
-            expand(cur.children[i], depth + 1, True)
-        return
-    else:               # min? no
-        return 
-        
+            if res[0] not in range(0, 3) or res[1] not in range(0, 3):
+                idx += 1
+                continue
+            board = copy_arr(cur.board)
+            play = cur.copy()
+            if board[res[0]][res[1]] == 0 and idx < 4:
+                board[pawnPos[0]][pawnPos[1]] = 0
+                board[res[0]][res[1]] = play.player.color
+                play.player.mov(pawnPos, res)
+                child = Node(parent=cur, board=board, player=play.enemy, enemy=play.player, depth=depth + 1)
+                child.move = [pawnPos, res]
+                _score = score(board)
+                if abs(_score[1]) != 100:
+                    child.score = expand(child, depth + 1, max = not max)
+                else:
+                    if max is False:
+                        child.score = -100
+                    else:
+                        child.score = 100
+                # if score(board)[play.player.color - 1] != 100:
+                #     child.score = expand(child, depth + 1, max = not max)
+                # else:
+                #     print("im back")
+                #     child.score = score(board)[play.enemy.color - 1]
+
+                if len(cur.children) != 0 and cur.children[0].score <= child.score and max is False:
+                    idx += 1
+                    continue
+                elif len(cur.children) != 0 and cur.children[0].score >= child.score and max is True:
+                    idx += 1
+                    continue
+
+                cur.children.append(child)
+                cur.sort(max)
+            if board[res[0]][res[1]] == play.enemy.color and idx >= 4:
+                board[pawnPos[0]][pawnPos[1]] = 0
+                board[res[0]][res[1]] = play.player.color
+                play.player.mov(pawnPos, res)
+                play.enemy.die(res[0], res[1])
+                child = Node(parent=cur, board=board, player=play.enemy, enemy=play.player, depth=depth + 1)
+                child.move = [pawnPos, res]
+                _score = score(board)
+                if abs(_score[1]) != 100:
+                    child.score = expand(child, depth + 1, max = not max)
+                else:
+                    if max is False:
+                        child.score = -100
+                    else:
+                        child.score = 100
+                # if score(board)[play.player.color - 1] != 100:
+                #     child.score = expand(child, depth + 1, max = not max)
+                # else:
+                #     print("im back")
+                #     child.score = score(board)[play.enemy.color - 1]
+                    
+                if len(cur.children) != 0 and cur.children[0].score <= child.score and max is False:
+                    idx += 1
+                    continue
+                elif len(cur.children) != 0 and cur.children[0].score >= child.score and max is True:
+                    idx += 1
+                    continue
+
+                cur.children.append(child)
+                cur.sort(max)
+            
+            idx += 1
+    return cur.children[0].score
+            
             
 def minimax(human, computer):
     global board
     global turn
     head = Node(parent=None, board=board, player=computer, enemy=human, depth=0)
     expand(head, 0, True)
-    node = maxplay(head, 0, True)
-    value = -9999
-    idx = -1
-    for i in range(len(node.children)):
-        if value <= node.children[i].score:
-            idx = i
-    src = node.children[idx].move[0]
-    dst = node.children[idx].move[1]
+    src = head.children[0].move[0]
+    dst = head.children[0].move[1]
     if board[dst[0]][dst[1]] == human.color:
         human.die(dst[0], dst[1])
         computer.mov(src, dst)
@@ -364,7 +368,7 @@ def show(human, computer):
     bg = nbg
     cv2.imshow('Board', nbg)
     cv2.setMouseCallback('Board', mouse, [human, computer])
-    cv2.waitKey(500)
+    cv2.waitKey(50)
     
     
 
@@ -402,8 +406,8 @@ def main():
                 humanR, computerR = score(board)
             else:
                 computerR, humanR = score(board)
-            print("human:", humanR)
-            print("computer:", computerR)
+            # print("human:", humanR)
+            # print("computer:", computerR)
             if humanR == 100:
                 turn = 10
                 show(human, computer)
@@ -418,7 +422,7 @@ def main():
                 show(human, computer)
                 minimax(human, computer)
                 # exit()
-        if input('Play more (1), Exit (2)') == '1':
+        if input('Play more (1), Exit (2) ') == '1':
             continue
         else:
             break
